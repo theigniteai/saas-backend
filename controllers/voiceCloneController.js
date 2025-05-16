@@ -20,9 +20,11 @@ export const cloneVoice = async (req, res) => {
       }
     })
 
+    console.log('[Voice Clone SUCCESS]', response.data)
+
     res.json({ voice_id: response.data.voice_id, name: response.data.name })
   } catch (err) {
-    console.error('Voice clone error:', err.response?.data || err.message)
-    res.status(500).json({ error: 'Voice cloning failed' })
+    console.error('[Voice Clone ERROR]', err.response?.data || err.message)
+    res.status(500).json({ error: 'Voice cloning failed', details: err.response?.data || err.message })
   }
 }
