@@ -12,7 +12,7 @@ export const generateAIResponse = async (req, res) => {
   }
 
   try {
-    // Step 1: Get GPT response from OpenAI
+    // Step 1: Get GPT response
     const chatRes = await axios.post('https://api.openai.com/v1/chat/completions', {
       model: 'gpt-3.5-turbo',
       messages: [{ role: 'user', content: prompt }],
@@ -24,8 +24,9 @@ export const generateAIResponse = async (req, res) => {
     })
 
     const aiText = chatRes.data.choices[0].message.content
+    console.log('[AI Response Text]', aiText)
 
-    // Step 2: Convert GPT text to speech using ElevenLabs
+    // Step 2: Convert to speech
     const audioRes = await axios.post(
       `https://api.elevenlabs.io/v1/text-to-speech/${voice_id}`,
       {
@@ -48,7 +49,7 @@ export const generateAIResponse = async (req, res) => {
 
     res.json({ audio_url: `/output/${fileName}` })
   } catch (err) {
-    console.error('AI Assistant error:', err.message)
-    res.status(500).json({ error: 'AI response generation failed' })
+    console.error('[AI Assistant ERROR]', err.response?.data || err.message)
+    res.status(500).json({ error: 'AI response generation failed', details: err.response?.data || err.message })
   }
 }
