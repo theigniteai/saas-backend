@@ -8,7 +8,6 @@ import { fileURLToPath } from 'url'
 
 dotenv.config()
 
-// Load from ENV directly
 import { GoogleAuth } from 'google-auth-library'
 
 const __filename = fileURLToPath(import.meta.url)
@@ -24,9 +23,7 @@ try {
 
   const credentials = JSON.parse(credentialsJson)
 
-  client = new TextToSpeechClient({
-    credentials,
-  })
+  client = new TextToSpeechClient({ credentials })
 } catch (err) {
   console.error("❌ GCP TTS Client Init Error:", err.message)
 }
@@ -43,7 +40,7 @@ export const generateAIResponse = async (req, res) => {
   }
 
   try {
-    // Step 1: Generate GPT response
+    // 1. Generate GPT response
     const chatRes = await axios.post(
       'https://api.openai.com/v1/chat/completions',
       {
@@ -61,7 +58,7 @@ export const generateAIResponse = async (req, res) => {
     const aiText = chatRes.data.choices[0].message.content
     console.log('[AI TEXT]', aiText)
 
-    // Step 2: Text-to-Speech
+    // 2. Convert to speech with Google TTS
     const request = {
       input: { text: aiText },
       voice: {
@@ -73,13 +70,23 @@ export const generateAIResponse = async (req, res) => {
 
     const [response] = await client.synthesizeSpeech(request)
 
+    // 3. Save output
+    const outputDir = path.join(__dirname, '../output')
+    if (!fs.existsSync(outputDir)) {
+      fs.mkdirSync(outputDir)
+    }
+
     const fileName = `gcp-${uuidv4()}.mp3`
-    const filePath = path.join(__dirname, '../output/', fileName)
+    const filePath = path.join(outputDir, fileName)
     fs.writeFileSync(filePath, response.audioContent, 'binary')
 
+    // 4. Respond with audio path
     res.json({ audio_url: `/output/${fileName}` })
   } catch (err) {
     console.error('[GCP AI ERROR]', err.message)
-    res.status(500).json({ error: 'Google TTS AI assistant failed', details: err.message })
+    res.status(500).json({
+      error: 'Google TTS AI assistant failed',
+      details: err.message,
+    })
   }
 }
