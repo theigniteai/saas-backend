@@ -6,7 +6,6 @@ import { fileURLToPath } from 'url';
 
 import authRoutes from './routes/authRoutes.js';
 import aiAssistantRoutes from './routes/aiAssistantRoutes.js';
-import accentRoutes from './routes/accentRoutes.js';
 import voiceCloneRoutes from './routes/voiceCloneRoutes.js';
 
 dotenv.config();
@@ -19,7 +18,7 @@ const __dirname = path.dirname(__filename);
 
 // ✅ CORS Configuration
 app.use(cors({
-  origin: '*', // You can replace '*' with your frontend URL for more security
+  origin: '*', // Change to your frontend domain for production
   methods: ['GET', 'POST'],
 }));
 
@@ -31,8 +30,7 @@ app.use('/output', express.static(path.join(__dirname, 'output')));
 
 // ✅ Routes
 app.use('/auth', authRoutes);
-app.use('/ai', aiAssistantRoutes);
-app.use('/accent', accentRoutes);
+app.use('/ai', aiAssistantRoutes);         // handles /respond
 app.use('/clone', voiceCloneRoutes);
 
 // ✅ Root route
