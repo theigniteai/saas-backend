@@ -10,7 +10,7 @@ const VoiceResponse = twilio.twiml.VoiceResponse;
 // ✅ Get AI Agent Settings
 export const getAgentSettings = async (req, res) => {
   try {
-    const userId = req.query.userId || req.user?.id;
+    const userId = req.query.userId;
     if (!userId) return res.status(400).json({ error: "Missing userId" });
 
     const settings = await AIAgentSettings.findOne({ userId });
@@ -25,6 +25,8 @@ export const getAgentSettings = async (req, res) => {
 export const updateAgentSettings = async (req, res) => {
   try {
     const { prompt, voice, enabled, assignedNumber, userId } = req.body;
+
+    console.log("Received Body:", req.body); // 🧪 Debug log
 
     if (!userId || !prompt || !assignedNumber) {
       return res.status(400).json({ error: "userId, prompt, and assignedNumber are required." });
@@ -46,7 +48,7 @@ export const updateAgentSettings = async (req, res) => {
 // ✅ Get Call Logs
 export const getCallLogs = async (req, res) => {
   try {
-    const userId = req.query.userId || req.user?.id;
+    const userId = req.query.userId;
     if (!userId) return res.status(400).json({ error: "Missing userId" });
 
     const logs = await CallLog.find({ userId }).sort({ createdAt: -1 });
@@ -57,7 +59,7 @@ export const getCallLogs = async (req, res) => {
   }
 };
 
-// ✅ Handle Incoming Twilio Call (Webhook)
+// ✅ Twilio Webhook: Handle Incoming Call
 export const twilioWebhookHandler = async (req, res) => {
   try {
     const from = req.body.From;
@@ -82,6 +84,7 @@ export const twilioWebhookHandler = async (req, res) => {
       userSpeech,
       aiReply,
       recordingUrl,
+      createdAt: new Date(),
     });
 
     const twiml = new VoiceResponse();
