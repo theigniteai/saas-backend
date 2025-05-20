@@ -1,5 +1,5 @@
 // models/CallLog.js
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const CallLogSchema = new mongoose.Schema(
   {
@@ -17,4 +17,5 @@ const CallLogSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model("CallLog", CallLogSchema);
+const CallLog = mongoose.model("CallLog", CallLogSchema);
+export default CallLog;
