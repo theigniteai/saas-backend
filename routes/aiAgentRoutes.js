@@ -1,12 +1,13 @@
 // routes/aiAgentRoutes.js
-const express = require("express");
-const router = express.Router();
-const {
+import express from "express";
+import {
   getAgentSettings,
   updateAgentSettings,
   getCallLogs,
   twilioWebhookHandler,
-} = require("../controllers/aiAgentController");
+} from "../controllers/aiAgentController.js"; // 👈 Add .js
+
+const router = express.Router();
 
 // Get AI agent settings for current user
 router.get("/settings", getAgentSettings);
@@ -20,4 +21,4 @@ router.get("/logs", getCallLogs);
 // Twilio will send POST request here for every call
 router.post("/webhook", twilioWebhookHandler);
 
-module.exports = router;
+export default router;
