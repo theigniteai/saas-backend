@@ -1,47 +1,48 @@
 // controllers/aiAgentController.js
-const AIAgentSettings = require("../models/AIAgentSettings");
-const CallLog = require("../models/CallLog");
-const { getOpenAIResponse } = require("../services/openaiService");
-const { generateTTS } = require("../services/ttsService");
-const { transcribeAudio } = require("../utils/transcriber");
-const VoiceResponse = require("twilio").twiml.VoiceResponse;
+import AIAgentSettings from "../models/AIAgentSettings.js";
+import CallLog from "../models/CallLog.js";
+import { getOpenAIResponse } from "../services/openaiService.js";
+import { generateTTS } from "../services/ttsService.js";
+import { transcribeAudio } from "../utils/transcriber.js";
+import twilio from "twilio";
 
-// Get AI Agent Settings
-exports.getAgentSettings = async (req, res) => {
-  const userId = req.user.id;
+const VoiceResponse = twilio.twiml.VoiceResponse;
+
+// ✅ Get AI Agent Settings
+export const getAgentSettings = async (req, res) => {
+  const userId = req.user?.id || req.query.userId;
   const settings = await AIAgentSettings.findOne({ userId });
   res.json(settings || {});
 };
 
-// Update Agent Settings
-exports.updateAgentSettings = async (req, res) => {
-  const { prompt, voice, enabled } = req.body;
-  const userId = req.user.id;
+// ✅ Update AI Agent Settings
+export const updateAgentSettings = async (req, res) => {
+  const { prompt, voice, enabled, assignedNumber } = req.body;
+  const userId = req.user?.id || req.body.userId;
 
   const updated = await AIAgentSettings.findOneAndUpdate(
     { userId },
-    { prompt, voice, enabled },
+    { prompt, voice, enabled, assignedNumber },
     { upsert: true, new: true }
   );
 
   res.json({ message: "Agent updated", data: updated });
 };
 
-// Get User Call Logs
-exports.getCallLogs = async (req, res) => {
-  const userId = req.user.id;
+// ✅ Get Call Logs
+export const getCallLogs = async (req, res) => {
+  const userId = req.user?.id || req.query.userId;
   const logs = await CallLog.find({ userId }).sort({ createdAt: -1 });
   res.json(logs);
 };
 
-// Twilio Webhook for Incoming Call
-exports.twilioWebhookHandler = async (req, res) => {
+// ✅ Twilio Webhook Handler
+export const twilioWebhookHandler = async (req, res) => {
   try {
     const from = req.body.From;
     const to = req.body.To;
     const recordingUrl = req.body.RecordingUrl || null;
 
-    // Step 1: Get user based on Twilio number
     const agent = await AIAgentSettings.findOne({ assignedNumber: to });
     if (!agent || !agent.enabled) {
       const twiml = new VoiceResponse();
@@ -49,16 +50,10 @@ exports.twilioWebhookHandler = async (req, res) => {
       return res.type("text/xml").send(twiml.toString());
     }
 
-    // Step 2: Transcribe caller's voice
     const userSpeech = await transcribeAudio(recordingUrl);
-
-    // Step 3: Get AI Response from OpenAI
     const aiReply = await getOpenAIResponse(agent.prompt, userSpeech);
-
-    // Step 4: Generate Voice using ElevenLabs or Google TTS
     const audioUrl = await generateTTS(aiReply, agent.voice);
 
-    // Step 5: Log the call
     await CallLog.create({
       userId: agent.userId,
       from,
@@ -68,7 +63,6 @@ exports.twilioWebhookHandler = async (req, res) => {
       recordingUrl,
     });
 
-    // Step 6: Send TWiML Response to play audio
     const twiml = new VoiceResponse();
     twiml.play(audioUrl);
     return res.type("text/xml").send(twiml.toString());
