@@ -1,13 +1,16 @@
 // utils/transcriber.js
-const axios = require("axios");
-const fs = require("fs");
-const path = require("path");
-const FormData = require("form-data");
-const { v4: uuidv4 } = require("uuid");
+import axios from "axios";
+import fs from "fs";
+import path from "path";
+import FormData from "form-data";
+import { v4 as uuidv4 } from "uuid";
+import { fileURLToPath } from "url";
 
-exports.transcribeAudio = async (recordingUrl) => {
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+export const transcribeAudio = async (recordingUrl) => {
   try {
-    // Step 1: Download audio
     const response = await axios({
       url: `${recordingUrl}.mp3`,
       method: "GET",
@@ -24,7 +27,6 @@ exports.transcribeAudio = async (recordingUrl) => {
       writer.on("error", reject);
     });
 
-    // Step 2: Transcribe with Whisper API
     const formData = new FormData();
     formData.append("file", fs.createReadStream(filePath));
     formData.append("model", "whisper-1");
@@ -40,7 +42,6 @@ exports.transcribeAudio = async (recordingUrl) => {
       }
     );
 
-    // Step 3: Delete temp file
     fs.unlinkSync(filePath);
 
     return transcribeRes.data.text;
