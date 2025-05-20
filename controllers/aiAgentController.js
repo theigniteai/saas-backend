@@ -1,4 +1,3 @@
-// controllers/aiAgentController.js
 import AIAgentSettings from "../models/AIAgentSettings.js";
 import CallLog from "../models/CallLog.js";
 import { getOpenAIResponse } from "../services/openaiService.js";
@@ -11,7 +10,9 @@ const VoiceResponse = twilio.twiml.VoiceResponse;
 // ✅ Get AI Agent Settings
 export const getAgentSettings = async (req, res) => {
   try {
-    const userId = req.user?.id || req.query.userId;
+    const userId = req.query.userId || req.user?.id;
+    if (!userId) return res.status(400).json({ error: "Missing userId" });
+
     const settings = await AIAgentSettings.findOne({ userId });
     res.json(settings || {});
   } catch (error) {
@@ -23,11 +24,10 @@ export const getAgentSettings = async (req, res) => {
 // ✅ Update AI Agent Settings
 export const updateAgentSettings = async (req, res) => {
   try {
-    const { prompt, voice, enabled, assignedNumber } = req.body;
-    const userId = req.user?.id || req.body.userId;
+    const { prompt, voice, enabled, assignedNumber, userId } = req.body;
 
-    if (!prompt || !assignedNumber) {
-      return res.status(400).json({ error: "Prompt and Assigned Number are required." });
+    if (!userId || !prompt || !assignedNumber) {
+      return res.status(400).json({ error: "userId, prompt, and assignedNumber are required." });
     }
 
     const updated = await AIAgentSettings.findOneAndUpdate(
@@ -46,7 +46,9 @@ export const updateAgentSettings = async (req, res) => {
 // ✅ Get Call Logs
 export const getCallLogs = async (req, res) => {
   try {
-    const userId = req.user?.id || req.query.userId;
+    const userId = req.query.userId || req.user?.id;
+    if (!userId) return res.status(400).json({ error: "Missing userId" });
+
     const logs = await CallLog.find({ userId }).sort({ createdAt: -1 });
     res.json(logs);
   } catch (error) {
@@ -55,7 +57,7 @@ export const getCallLogs = async (req, res) => {
   }
 };
 
-// ✅ Handle Incoming Twilio Call
+// ✅ Handle Incoming Twilio Call (Webhook)
 export const twilioWebhookHandler = async (req, res) => {
   try {
     const from = req.body.From;
