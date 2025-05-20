@@ -1,14 +1,19 @@
 // services/ttsService.js
-const axios = require("axios");
-const fs = require("fs");
-const path = require("path");
-const { v4: uuidv4 } = require("uuid");
-const textToSpeech = require("@google-cloud/text-to-speech");
-const client = new textToSpeech.TextToSpeechClient();
+import axios from "axios";
+import fs from "fs";
+import path from "path";
+import { v4 as uuidv4 } from "uuid";
+import { TextToSpeechClient } from "@google-cloud/text-to-speech";
+import { fileURLToPath } from "url";
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const client = new TextToSpeechClient();
 const ELEVEN_API_KEY = process.env.ELEVEN_API_KEY;
+const BACKEND_URL = process.env.BACKEND_URL;
 
-exports.generateTTS = async (text, voiceId) => {
+export const generateTTS = async (text, voiceId) => {
   try {
     // === Attempt ElevenLabs First ===
     const response = await axios.post(
@@ -33,9 +38,9 @@ exports.generateTTS = async (text, voiceId) => {
     const filename = `audio_${uuidv4()}.mp3`;
     const filePath = path.join(__dirname, "..", "public", filename);
     fs.writeFileSync(filePath, response.data);
-    return `${process.env.BACKEND_URL}/${filename}`;
+    return `${BACKEND_URL}/${filename}`;
   } catch (err) {
-    console.warn("ElevenLabs failed, using Google TTS fallback:", err.message);
+    console.warn("❗ ElevenLabs failed, using Google TTS fallback:", err.message);
 
     // === Google Cloud TTS Fallback ===
     const request = {
@@ -53,6 +58,6 @@ exports.generateTTS = async (text, voiceId) => {
     const filename = `google_audio_${uuidv4()}.mp3`;
     const filePath = path.join(__dirname, "..", "public", filename);
     fs.writeFileSync(filePath, response.audioContent);
-    return `${process.env.BACKEND_URL}/${filename}`;
+    return `${BACKEND_URL}/${filename}`;
   }
 };
