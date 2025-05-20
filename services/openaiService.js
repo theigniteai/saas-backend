@@ -1,11 +1,11 @@
 // services/openaiService.js
-const { OpenAI } = require("openai");
+import OpenAI from "openai";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-exports.getOpenAIResponse = async (userPrompt, userInput) => {
+export const getOpenAIResponse = async (userPrompt, userInput) => {
   try {
     const fullPrompt = `
 You are a smart, polite and helpful AI calling agent.
