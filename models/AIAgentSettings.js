@@ -1,3 +1,4 @@
+// models/AIAgentSettings.js
 import mongoose from "mongoose";
 
 const AIAgentSettingsSchema = new mongoose.Schema({
