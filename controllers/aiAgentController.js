@@ -10,33 +10,52 @@ const VoiceResponse = twilio.twiml.VoiceResponse;
 
 // ✅ Get AI Agent Settings
 export const getAgentSettings = async (req, res) => {
-  const userId = req.user?.id || req.query.userId;
-  const settings = await AIAgentSettings.findOne({ userId });
-  res.json(settings || {});
+  try {
+    const userId = req.user?.id || req.query.userId;
+    const settings = await AIAgentSettings.findOne({ userId });
+    res.json(settings || {});
+  } catch (error) {
+    console.error("Fetch settings error:", error.message);
+    res.status(500).json({ error: "Failed to fetch settings." });
+  }
 };
 
 // ✅ Update AI Agent Settings
 export const updateAgentSettings = async (req, res) => {
-  const { prompt, voice, enabled, assignedNumber } = req.body;
-  const userId = req.user?.id || req.body.userId;
+  try {
+    const { prompt, voice, enabled, assignedNumber } = req.body;
+    const userId = req.user?.id || req.body.userId;
 
-  const updated = await AIAgentSettings.findOneAndUpdate(
-    { userId },
-    { prompt, voice, enabled, assignedNumber },
-    { upsert: true, new: true }
-  );
+    if (!prompt || !assignedNumber) {
+      return res.status(400).json({ error: "Prompt and Assigned Number are required." });
+    }
 
-  res.json({ message: "Agent updated", data: updated });
+    const updated = await AIAgentSettings.findOneAndUpdate(
+      { userId },
+      { prompt, voice, enabled, assignedNumber },
+      { upsert: true, new: true }
+    );
+
+    res.json({ message: "Agent updated", data: updated });
+  } catch (error) {
+    console.error("Agent update error:", error.message);
+    res.status(500).json({ error: "Internal server error while saving agent settings." });
+  }
 };
 
 // ✅ Get Call Logs
 export const getCallLogs = async (req, res) => {
-  const userId = req.user?.id || req.query.userId;
-  const logs = await CallLog.find({ userId }).sort({ createdAt: -1 });
-  res.json(logs);
+  try {
+    const userId = req.user?.id || req.query.userId;
+    const logs = await CallLog.find({ userId }).sort({ createdAt: -1 });
+    res.json(logs);
+  } catch (error) {
+    console.error("Fetch logs error:", error.message);
+    res.status(500).json({ error: "Failed to fetch call logs." });
+  }
 };
 
-// ✅ Twilio Webhook Handler
+// ✅ Handle Incoming Twilio Call
 export const twilioWebhookHandler = async (req, res) => {
   try {
     const from = req.body.From;
@@ -67,9 +86,9 @@ export const twilioWebhookHandler = async (req, res) => {
     twiml.play(audioUrl);
     return res.type("text/xml").send(twiml.toString());
   } catch (error) {
-    console.error("AI Agent Call Error:", error.message);
+    console.error("Webhook error:", error.message);
     const twiml = new VoiceResponse();
-    twiml.say("Sorry, an error occurred while processing the call.");
+    twiml.say("Sorry, something went wrong with the AI agent.");
     return res.type("text/xml").send(twiml.toString());
   }
 };
