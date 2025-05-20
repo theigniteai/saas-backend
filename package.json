@@ -15,6 +15,7 @@
     "form-data": "^4.0.0",
     "jsonwebtoken": "^9.0.0",
     "mongoose": "^7.0.3",
+      "openai": "^4.0.0",  // ✅ Must be listed
     "multer": "^1.4.5-lts.1",
     "uuid": "^9.0.0",
       "twilio": "^4.0.0"  
