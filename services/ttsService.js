@@ -15,7 +15,6 @@ const BACKEND_URL = process.env.BACKEND_URL;
 
 export const generateTTS = async (text, voiceId) => {
   try {
-    // === Attempt ElevenLabs First ===
     const response = await axios.post(
       `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`,
       {
@@ -42,7 +41,6 @@ export const generateTTS = async (text, voiceId) => {
   } catch (err) {
     console.warn("❗ ElevenLabs failed, using Google TTS fallback:", err.message);
 
-    // === Google Cloud TTS Fallback ===
     const request = {
       input: { text },
       voice: {
