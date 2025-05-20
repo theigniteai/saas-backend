@@ -1,5 +1,4 @@
-// models/AIAgentSettings.js
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const AIAgentSettingsSchema = new mongoose.Schema({
   userId: {
@@ -25,4 +24,5 @@ const AIAgentSettingsSchema = new mongoose.Schema({
   },
 });
 
-module.exports = mongoose.model("AIAgentSettings", AIAgentSettingsSchema);
+const AIAgentSettings = mongoose.model("AIAgentSettings", AIAgentSettingsSchema);
+export default AIAgentSettings;
