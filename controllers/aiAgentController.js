@@ -1,93 +1,54 @@
 // controllers/aiAgentController.js
-import AIAgentSettings from "../models/AIAgentSettings.js";
-import CallLog from "../models/CallLog.js";
-import { getOpenAIResponse } from "../services/openaiService.js";
-import { generateTTS } from "../services/ttsService.js";
-import { transcribeAudio } from "../utils/transcriber.js";
-import mongoose from "mongoose";
-import twilio from "twilio";
-
-const VoiceResponse = twilio.twiml.VoiceResponse;
-
 export const getAgentSettings = async (req, res) => {
   try {
-    const userId = req.query.userId || req.user?.id;
-    const isValidObjectId = mongoose.Types.ObjectId.isValid(userId);
-    const query = { userId: isValidObjectId ? new mongoose.Types.ObjectId(userId) : userId };
-    const settings = await AIAgentSettings.findOne(query);
-    res.json(settings || {});
+    return res.json({
+      prompt: "Hi, I'm your AI Agent",
+      voice: "eleven_en_us_male",
+      assignedNumber: "+11234567890",
+      enabled: true,
+    });
   } catch (error) {
-    console.error("Fetch settings error:", error.message);
-    res.status(500).json({ error: "Failed to fetch settings." });
+    res.status(500).json({ error: "Temporary mock failed." });
   }
 };
 
 export const updateAgentSettings = async (req, res) => {
   try {
     const { prompt, voice, enabled, assignedNumber, userId } = req.body;
+
     if (!userId || !prompt || !assignedNumber) {
-      return res.status(400).json({ error: "userId, prompt, and assignedNumber are required." });
+      return res.status(400).json({
+        error: "userId, prompt, and assignedNumber are required.",
+      });
     }
-    const isValidObjectId = mongoose.Types.ObjectId.isValid(userId);
-    const query = { userId: isValidObjectId ? new mongoose.Types.ObjectId(userId) : userId };
-    const updated = await AIAgentSettings.findOneAndUpdate(
-      query,
-      { prompt, voice, enabled, assignedNumber },
-      { upsert: true, new: true }
-    );
-    res.json({ message: "Agent updated", data: updated });
+
+    console.log("📝 Mock saved settings:", req.body);
+
+    // Simulate successful save
+    return res.json({ message: "Mock agent settings saved successfully" });
   } catch (error) {
-    console.error("Agent update error:", error.message);
-    res.status(500).json({ error: "Internal server error while saving agent settings." });
+    res.status(500).json({ error: "Temporary mock save failed." });
   }
 };
 
 export const getCallLogs = async (req, res) => {
   try {
-    const userId = req.query.userId || req.user?.id;
-    const isValidObjectId = mongoose.Types.ObjectId.isValid(userId);
-    const query = { userId: isValidObjectId ? new mongoose.Types.ObjectId(userId) : userId };
-    const logs = await CallLog.find(query).sort({ createdAt: -1 });
-    res.json(logs);
+    return res.json([
+      {
+        from: "+15554443333",
+        userSpeech: "What are your office hours?",
+        aiReply: "We are open from 9 AM to 6 PM.",
+        recordingUrl: "https://example.com/recording", // dummy link
+        createdAt: new Date(),
+      },
+    ]);
   } catch (error) {
-    console.error("Fetch logs error:", error.message);
-    res.status(500).json({ error: "Failed to fetch call logs." });
+    res.status(500).json({ error: "Temporary mock fetch logs failed." });
   }
 };
 
 export const twilioWebhookHandler = async (req, res) => {
-  try {
-    const from = req.body.From;
-    const to = req.body.To;
-    const recordingUrl = req.body.RecordingUrl || null;
-
-    const agent = await AIAgentSettings.findOne({ assignedNumber: to });
-    if (!agent || !agent.enabled) {
-      const twiml = new VoiceResponse();
-      twiml.say("The agent is currently unavailable.");
-      return res.type("text/xml").send(twiml.toString());
-    }
-
-    const userSpeech = await transcribeAudio(recordingUrl);
-    const aiReply = await getOpenAIResponse(agent.prompt, userSpeech);
-    const audioUrl = await generateTTS(aiReply, agent.voice);
-
-    await CallLog.create({
-      userId: agent.userId,
-      from,
-      to,
-      userSpeech,
-      aiReply,
-      recordingUrl
-    });
-
-    const twiml = new VoiceResponse();
-    twiml.play(audioUrl);
-    return res.type("text/xml").send(twiml.toString());
-  } catch (error) {
-    console.error("Webhook error:", error.message);
-    const twiml = new VoiceResponse();
-    twiml.say("Sorry, something went wrong with the AI agent.");
-    return res.type("text/xml").send(twiml.toString());
-  }
+  const twiml = new twilio.twiml.VoiceResponse();
+  twiml.say("AI Agent is currently in mock mode. Please try again later.");
+  return res.type("text/xml").send(twiml.toString());
 };
