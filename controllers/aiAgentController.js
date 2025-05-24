@@ -1,9 +1,11 @@
+// controllers/aiAgentController.js
 import { getOpenAIResponse } from "../services/openaiService.js";
 import { generateTTS } from "../services/ttsService.js";
 import { transcribeAudio } from "../utils/transcriber.js";
 import twilio from "twilio";
 
 const VoiceResponse = twilio.twiml.VoiceResponse;
+const client = twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH);
 
 let agentSettings = {
   userId: "test_user_123",
@@ -24,7 +26,6 @@ export const updateAgentSettings = (req, res) => {
       error: "userId, prompt, and assignedNumber are required.",
     });
   }
-
   agentSettings = { userId, prompt, assignedNumber, voiceId, isEnabled };
   res.json({ message: "Agent settings updated", agentSettings });
 };
@@ -50,8 +51,7 @@ export const twilioWebhookHandler = async (req, res) => {
     });
     gather.say("Please tell me how I can help you.");
 
-    res.type("text/xml");
-    res.send(twiml.toString());
+    res.type("text/xml").send(twiml.toString());
   } catch (err) {
     res.status(500).send("Internal server error");
   }
@@ -69,11 +69,28 @@ export const twilioWebhookResponse = async (req, res) => {
     const twiml = new VoiceResponse();
     twiml.play(audioUrl);
 
-    res.type("text/xml");
-    res.send(twiml.toString());
+    res.type("text/xml").send(twiml.toString());
   } catch (err) {
     const twiml = new VoiceResponse();
     twiml.say("Sorry, there was a problem with the AI agent.");
     res.type("text/xml").send(twiml.toString());
+  }
+};
+
+export const startOutboundCall = async (req, res) => {
+  try {
+    const { to } = req.body;
+    const from = process.env.TWILIO_NUMBER;
+
+    const call = await client.calls.create({
+      url: `${process.env.BACKEND_URL}/ai-agent/webhook`,
+      to,
+      from,
+    });
+
+    res.json({ message: "Call started", sid: call.sid });
+  } catch (err) {
+    console.error("Twilio call error:", err.message);
+    res.status(500).json({ error: "Call failed" });
   }
 };
