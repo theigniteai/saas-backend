@@ -9,16 +9,16 @@ import {
 
 const router = express.Router();
 
-// GET: Retrieve agent settings
+// Get AI agent settings (hardcoded response for now)
 router.get("/settings", getAgentSettings);
 
-// POST: Save or update agent settings
+// Update agent settings (temporarily save in memory)
 router.post("/settings", updateAgentSettings);
 
-// GET: Call logs for user
+// Get call logs (dummy array for now)
 router.get("/logs", getCallLogs);
 
-// POST: Handle incoming Twilio calls
+// Handle inbound Twilio call
 router.post("/webhook", twilioWebhookHandler);
 
 export default router;
