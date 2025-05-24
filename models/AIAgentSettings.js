@@ -1,5 +1,4 @@
 // models/AIAgentSettings.js
-
 import mongoose from "mongoose";
 
 const AIAgentSettingsSchema = new mongoose.Schema({
@@ -10,5 +9,5 @@ const AIAgentSettingsSchema = new mongoose.Schema({
   enabled: { type: Boolean, default: false },
 }, { timestamps: true });
 
-// ✅ Make sure the collection name is exactly 'aiagentsettings' (lowercase)
+// IMPORTANT: collection name is lowercase "aiagentsettings"
 export default mongoose.model("AIAgentSettings", AIAgentSettingsSchema, "aiagentsettings");
