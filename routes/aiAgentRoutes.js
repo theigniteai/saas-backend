@@ -5,20 +5,20 @@ import {
   updateAgentSettings,
   getCallLogs,
   twilioWebhookHandler,
-} from "../controllers/aiAgentController.js"; // 👈 Add .js
+} from "../controllers/aiAgentController.js";
 
 const router = express.Router();
 
-// Get AI agent settings for current user
+// ✅ Get AI Agent Settings
 router.get("/settings", getAgentSettings);
 
-// Update agent settings (prompt, voice, enabled)
+// ✅ Update AI Agent Settings
 router.post("/settings", updateAgentSettings);
 
-// Get past call logs for current user
+// ✅ Get Call Logs
 router.get("/logs", getCallLogs);
 
-// Twilio will send POST request here for every call
+// ✅ Handle Incoming Twilio Call
 router.post("/webhook", twilioWebhookHandler);
 
 export default router;
