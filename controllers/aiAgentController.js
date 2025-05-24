@@ -12,8 +12,9 @@ const VoiceResponse = twilio.twiml.VoiceResponse;
 export const getAgentSettings = async (req, res) => {
   try {
     const userId = req.query.userId || req.user?.id;
-    const objectId = new mongoose.Types.ObjectId(userId);
-    const settings = await AIAgentSettings.findOne({ userId: objectId });
+    const isValidObjectId = mongoose.Types.ObjectId.isValid(userId);
+    const query = { userId: isValidObjectId ? new mongoose.Types.ObjectId(userId) : userId };
+    const settings = await AIAgentSettings.findOne(query);
     res.json(settings || {});
   } catch (error) {
     console.error("Fetch settings error:", error.message);
@@ -27,9 +28,10 @@ export const updateAgentSettings = async (req, res) => {
     if (!userId || !prompt || !assignedNumber) {
       return res.status(400).json({ error: "userId, prompt, and assignedNumber are required." });
     }
-    const objectId = new mongoose.Types.ObjectId(userId);
+    const isValidObjectId = mongoose.Types.ObjectId.isValid(userId);
+    const query = { userId: isValidObjectId ? new mongoose.Types.ObjectId(userId) : userId };
     const updated = await AIAgentSettings.findOneAndUpdate(
-      { userId: objectId },
+      query,
       { prompt, voice, enabled, assignedNumber },
       { upsert: true, new: true }
     );
@@ -43,8 +45,9 @@ export const updateAgentSettings = async (req, res) => {
 export const getCallLogs = async (req, res) => {
   try {
     const userId = req.query.userId || req.user?.id;
-    const objectId = new mongoose.Types.ObjectId(userId);
-    const logs = await CallLog.find({ userId: objectId }).sort({ createdAt: -1 });
+    const isValidObjectId = mongoose.Types.ObjectId.isValid(userId);
+    const query = { userId: isValidObjectId ? new mongoose.Types.ObjectId(userId) : userId };
+    const logs = await CallLog.find(query).sort({ createdAt: -1 });
     res.json(logs);
   } catch (error) {
     console.error("Fetch logs error:", error.message);
