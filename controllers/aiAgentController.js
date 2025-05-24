@@ -1,65 +1,60 @@
+// controllers/aiAgentController.js
 import AIAgentSettings from "../models/AIAgentSettings.js";
-import CallLog from "../models/CallLog.js";
-import { getOpenAIResponse } from "../services/openaiService.js";
-import { generateTTS } from "../services/ttsService.js";
-import { transcribeAudio } from "../utils/transcriber.js";
+import CallLog from "../models/CallLog.js"; // Optional for logs
+import { getOpenAIResponse } from "../services/openaiService.js"; // Optional
+import { generateTTS } from "../services/ttsService.js"; // Optional
+import { transcribeAudio } from "../utils/transcriber.js"; // Optional
 import twilio from "twilio";
 
 const VoiceResponse = twilio.twiml.VoiceResponse;
 
-// ✅ Get AI Agent Settings
+// ✅ Get Agent Settings
 export const getAgentSettings = async (req, res) => {
   try {
-    const userId = req.query.userId;
-    if (!userId) return res.status(400).json({ error: "Missing userId" });
-
+    const userId = req.user?.id || req.query.userId || "demo-user";
     const settings = await AIAgentSettings.findOne({ userId });
     res.json(settings || {});
-  } catch (error) {
-    console.error("Fetch settings error:", error.message);
-    res.status(500).json({ error: "Failed to fetch settings." });
+  } catch (err) {
+    console.error("Fetch settings error:", err.message);
+    res.status(500).json({ error: "Failed to fetch agent settings." });
   }
 };
 
-// ✅ Update AI Agent Settings
+// ✅ Update Agent Settings
 export const updateAgentSettings = async (req, res) => {
   try {
-    const { prompt, voice, enabled, assignedNumber, userId } = req.body;
+    const { prompt, voice, assignedNumber, enabled, userId } = req.body;
 
-    console.log("Received Body:", req.body); // 🧪 Debug log
-
-    if (!userId || !prompt || !assignedNumber) {
+    if (!prompt || !assignedNumber || !userId) {
       return res.status(400).json({ error: "userId, prompt, and assignedNumber are required." });
     }
 
     const updated = await AIAgentSettings.findOneAndUpdate(
       { userId },
-      { prompt, voice, enabled, assignedNumber },
+      { prompt, voice, assignedNumber, enabled },
       { upsert: true, new: true }
     );
 
-    res.json({ message: "Agent updated", data: updated });
-  } catch (error) {
-    console.error("Agent update error:", error.message);
+    res.json({ message: "Agent updated successfully", data: updated });
+  } catch (err) {
+    console.error("Agent update error:", err.message);
     res.status(500).json({ error: "Internal server error while saving agent settings." });
   }
 };
 
-// ✅ Get Call Logs
+// ✅ Get Call Logs (optional)
 export const getCallLogs = async (req, res) => {
   try {
-    const userId = req.query.userId;
-    if (!userId) return res.status(400).json({ error: "Missing userId" });
-
+    const userId = req.user?.id || req.query.userId || "demo-user";
     const logs = await CallLog.find({ userId }).sort({ createdAt: -1 });
     res.json(logs);
-  } catch (error) {
-    console.error("Fetch logs error:", error.message);
+  } catch (err) {
+    console.error("Fetch logs error:", err.message);
     res.status(500).json({ error: "Failed to fetch call logs." });
   }
 };
 
-// ✅ Twilio Webhook: Handle Incoming Call
+// ✅ Twilio Webhook (optional)
 export const twilioWebhookHandler = async (req, res) => {
   try {
     const from = req.body.From;
@@ -69,7 +64,7 @@ export const twilioWebhookHandler = async (req, res) => {
     const agent = await AIAgentSettings.findOne({ assignedNumber: to });
     if (!agent || !agent.enabled) {
       const twiml = new VoiceResponse();
-      twiml.say("The agent is currently unavailable. Please try again later.");
+      twiml.say("The AI agent is currently disabled.");
       return res.type("text/xml").send(twiml.toString());
     }
 
@@ -83,17 +78,16 @@ export const twilioWebhookHandler = async (req, res) => {
       to,
       userSpeech,
       aiReply,
-      recordingUrl,
-      createdAt: new Date(),
+      recordingUrl
     });
 
     const twiml = new VoiceResponse();
     twiml.play(audioUrl);
     return res.type("text/xml").send(twiml.toString());
-  } catch (error) {
-    console.error("Webhook error:", error.message);
+  } catch (err) {
+    console.error("Twilio webhook error:", err.message);
     const twiml = new VoiceResponse();
-    twiml.say("Sorry, something went wrong with the AI agent.");
+    twiml.say("Something went wrong with the AI agent.");
     return res.type("text/xml").send(twiml.toString());
   }
 };
