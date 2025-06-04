@@ -10,7 +10,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const client = new TextToSpeechClient();
-const ELEVEN_API_KEY = process.env.ELEVEN_API_KEY;
+const ELEVEN_API_KEY = process.env.ELEVENLABS_API_KEY;
 const BACKEND_URL = process.env.BACKEND_URL;
 
 export const generateTTS = async (text, voiceId) => {
