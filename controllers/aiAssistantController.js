@@ -16,14 +16,12 @@ const __dirname = path.dirname(__filename)
 let client
 
 try {
-  const credentialsJson = process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON
-  if (!credentialsJson) {
-    throw new Error("Missing GOOGLE_APPLICATION_CREDENTIALS_JSON in ENV.")
+  const credentialsPath = process.env.GOOGLE_APPLICATION_CREDENTIALS
+  if (!credentialsPath) {
+    throw new Error("Missing GOOGLE_APPLICATION_CREDENTIALS in ENV.")
   }
 
-  const credentials = JSON.parse(credentialsJson)
-
-  client = new TextToSpeechClient({ credentials })
+  client = new TextToSpeechClient({ keyFilename: credentialsPath })
 } catch (err) {
   console.error("❌ GCP TTS Client Init Error:", err.message)
 }
@@ -50,7 +48,7 @@ export const generateAIResponse = async (req, res) => {
       },
       {
         headers: {
-          Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+          Authorization: `Bearer ${process.env.OPENAI_KEY}`,
         },
       }
     )

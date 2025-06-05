@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 const CallLogSchema = new mongoose.Schema({
-  userId: { type: mongoose.Schema.Types.ObjectId, required: true }, // <-- fix here too
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   from: String,
   to: String,
   userSpeech: String,

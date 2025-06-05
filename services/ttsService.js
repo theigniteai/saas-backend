@@ -10,7 +10,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const client = new TextToSpeechClient();
-const ELEVEN_API_KEY = process.env.ELEVEN_API_KEY;
+const ELEVEN_API_KEY = process.env.ELEVENLABS_API_KEY;
 const BACKEND_URL = process.env.BACKEND_URL;
 
 export const generateTTS = async (text, voiceId) => {
@@ -35,9 +35,9 @@ export const generateTTS = async (text, voiceId) => {
     );
 
     const filename = `audio_${uuidv4()}.mp3`;
-    const filePath = path.join(__dirname, "..", "public", filename);
+    const filePath = path.join(__dirname, "..", "output", filename);
     fs.writeFileSync(filePath, response.data);
-    return `${BACKEND_URL}/${filename}`;
+    return `${BACKEND_URL}/output/${filename}`;
   } catch (err) {
     console.warn("❗ ElevenLabs failed, using Google TTS fallback:", err.message);
 
@@ -54,8 +54,8 @@ export const generateTTS = async (text, voiceId) => {
 
     const [response] = await client.synthesizeSpeech(request);
     const filename = `google_audio_${uuidv4()}.mp3`;
-    const filePath = path.join(__dirname, "..", "public", filename);
+    const filePath = path.join(__dirname, "..", "output", filename);
     fs.writeFileSync(filePath, response.audioContent);
-    return `${BACKEND_URL}/${filename}`;
+    return `${BACKEND_URL}/output/${filename}`;
   }
 };

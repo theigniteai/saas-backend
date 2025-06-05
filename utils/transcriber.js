@@ -36,7 +36,7 @@ export const transcribeAudio = async (recordingUrl) => {
       formData,
       {
         headers: {
-          Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+          Authorization: `Bearer ${process.env.OPENAI_KEY}`,
           ...formData.getHeaders(),
         },
       }
