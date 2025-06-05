@@ -15,7 +15,7 @@ const __dirname = path.dirname(__filename);
 
 // Google TTS client (fallback if needed)
 const gcpClient = new TextToSpeechClient({
-  credentials: JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON),
+  keyFilename: process.env.GOOGLE_APPLICATION_CREDENTIALS,
 });
 
 // POST /ai/respond
